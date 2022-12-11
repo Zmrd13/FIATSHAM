@@ -1,12 +1,17 @@
 #include <iostream>
+#include <iomanip>
 #include "crypt.h"
 
 using namespace std;
 
-
+/**
+ * Client class with name and secret
+ *
+ *
+ * */
 class Client {
 private:
-    lli R, N, S, V;
+    lli R{}, N, S{}, V{};
     string name;
     bool cheater = false;
 
@@ -43,15 +48,27 @@ public:
         return modPow(R, 2, N);
     }
 
-    lli setV(lli V) {
-        this->V = V;
-        cheater = true;
-    }
+
 
     lli getY(int E) {
         return R * modPow(S, E, N);
     }
-
+    /**
+ * Func for cheating mode
+ * sets own shared key as someone else's shared key
+ * turns cheat mode on
+ *
+ * */
+    void setV(lli V) {
+        this->V = V;
+        cheater = true;
+    }
+/**
+ * Func for cheating mode
+ * randomly chooses what to give to getX without knowing the secret but with a shared key
+ * @see setV()
+ *
+ * */
     lli cheatX() {
         lli X;
         switch (rand() % 2) {
@@ -68,9 +85,14 @@ public:
 
 };
 
+/**
+ * Server class with login and common keys , provides accreditation with |numOfChecks|-times
+ *
+ *
+ * */
 class Server {
 private:
-    unsigned int numOfClients = 0, numOfChecks = 1;
+    unsigned int numOfChecks = 1;
 
     lli P{}, Q{}, N{};
     struct login {
@@ -79,12 +101,25 @@ private:
     };
     vector<login> clientBase;
 public:
-    explicit Server(int numOfChecks,lli min = INT32_MAX >> 3, lli max = INT32_MAX>>2):numOfChecks(numOfChecks) {
+    /**
+     * @see Server
+     * @param numOfChecks - deepness of verification
+     * @param min - min for random
+     * @param max - max for random
+     * */
+    explicit Server(int numOfChecks, lli min = INT32_MAX >> 4, lli max = INT32_MAX >> 1) : numOfChecks(numOfChecks) {
         P = genPrime(min, max);
         Q = genPrime(min, max);
         N = P * Q;
     }
 
+    /**
+     *  Func for signing clients in server's base
+      * @see Server
+      * @see Client
+      * @param V-Client's common key
+      * @param name-Client's name (unique)
+      * */
     void signIn(lli V, string name) {
         login curr;
         for (auto &i: clientBase) {
@@ -96,7 +131,12 @@ public:
         curr.name = name;
         clientBase.push_back(curr);
     }
-
+    /**
+      *  Func for getting common key of given name
+       * @see Server
+       * @see Client
+       * @param name-Client's name
+       * */
     lli getLoginV(const string &name) {
         for (auto &i: clientBase) {
             if (i.name == name) {
@@ -105,11 +145,14 @@ public:
         }
         return 0;
     }
-
+    /**
+      *  Func for printing entire client base
+       * @see Server
+       * */
     lli printBase() {
         for (auto &i: clientBase) {
 
-            cout << i.name << " : " << i.V << endl;
+            cout  << "NAME: |" <<setw(15)<< i.name << "|  SHARED KEY : |" <<setw(20)<< i.V <<"|\n";
         }
         return 0;
     }
@@ -118,13 +161,20 @@ public:
         return N;
     }
 
+        /**
+         *  Func for verifying given client
+          * @see Server
+          * @see Client
+          * @param intruder-pointer to given client
+          * @return true if verified
+          * */
     bool verify(Client *intruder) {
         bool verified = false;
         for (int i = 0; i < numOfChecks; i++) {
             lli X = intruder->getX();
             int E = (int) rand() % 2;
             lli Y = intruder->getY(E);
-            lli c = ((Y * Y)== X * modPow(getLoginV(intruder->getName()), E, N));
+            lli c = ((Y * Y) == X * modPow(getLoginV(intruder->getName()), E, N));
 //              cout<<(Y * Y)<<" "<< X * modPow(getLoginV(intruder->getName()), E, N)
 //              <<endl;
             if (Y) {
@@ -144,26 +194,35 @@ public:
 };
 
 int main() {
+
+    //Initialize all components
     srand(time(NULL));
-    Server server = Server(7);
+    Server server = Server(20);
     lli N = server.getN();
     Client alice = Client(N, "alice");
     Client bob = Client(N, "bob");
     Client cheaterClient = Client(N, "alice");
+
+    //Signing in server's base
     server.signIn(bob.getV(), bob.getName());
     server.signIn(alice.getV(), alice.getName());
-    cout << "TRUE PERSON:" << server.verify(&alice) << endl;
-    cout << "TRUE PERSON:" << server.verify(&bob) << endl;
+    string result =(server.verify(&alice))? "SUCCESS" :"FAIL";
+    cout << "TRUE PERSON:" <<result  << endl;
+    result =(server.verify(&bob))? "SUCCESS" :"FAIL";
+    cout << "TRUE PERSON:" << result << endl;
     server.printBase();
+
+
+    //Cheating attempt
     cheaterClient.setV(server.getLoginV("alice"));
-    int count=0;
-    while(!server.verify(&cheaterClient)){
+    int count = 0;
+    while (!server.verify(&cheaterClient)) {
         count++;
-        if(count>1000000
-        ){
-            cout<<"\nLIMIT\n";break;
+        if (count > 1000000) {
+            cout << "\nLIMIT\n";
+            break;
         }
     }
-    cout << "PERSON WITH CHEATED V KEY :" <<count << endl;
+    cout << "PERSON WITH CHEATED V KEY LOGIN ATTEMPTS :" << count << endl;
     return 0;
 }
