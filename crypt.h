@@ -46,7 +46,7 @@ lli modPow(lli iBase, lli iPow, lli iMod) {
     if (iMod == 0) {
         return 0;
     }
-    if (iPow == 1) {
+    if (iPow == 0) {
         return 1;
     }
     vector<lli> vecMod = {};

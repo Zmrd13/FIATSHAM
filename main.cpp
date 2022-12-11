@@ -79,7 +79,7 @@ private:
     };
     vector<login> clientBase;
 public:
-    explicit Server(lli min = INT32_MAX >> 1, lli max = INT32_MAX) {
+    explicit Server(int numOfChecks,lli min = INT32_MAX >> 3, lli max = INT32_MAX>>2):numOfChecks(numOfChecks) {
         P = genPrime(min, max);
         Q = genPrime(min, max);
         N = P * Q;
@@ -119,23 +119,19 @@ public:
     }
 
     bool verify(Client *intruder) {
-
         bool verified = false;
-        cout << intruder->getName() << "  " << getLoginV(intruder->getName()) << endl;
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < numOfChecks; i++) {
             lli X = intruder->getX();
             int E = (int) rand() % 2;
-            //  cout<<E<<endl;
             lli Y = intruder->getY(E);
-            lli c = ((Y * Y) == X * modPow(getLoginV(intruder->getName()), E, N));
-            //  cout<<(Y * Y)<<" "<< X * modPow(getLoginV(intruder->getName()), E, N)
-            //  <<endl;
+            lli c = ((Y * Y)== X * modPow(getLoginV(intruder->getName()), E, N));
+//              cout<<(Y * Y)<<" "<< X * modPow(getLoginV(intruder->getName()), E, N)
+//              <<endl;
             if (Y) {
                 if (c) {
                     verified = true;
                 } else {
                     return false;
-                    // cout<<verified;
                 }
             } else {
                 return false;
@@ -149,19 +145,25 @@ public:
 
 int main() {
     srand(time(NULL));
-    Server server = Server();
-    Server cheaterServer = Server();
+    Server server = Server(7);
     lli N = server.getN();
     Client alice = Client(N, "alice");
     Client bob = Client(N, "bob");
     Client cheaterClient = Client(N, "alice");
     server.signIn(bob.getV(), bob.getName());
-    server.signIn(cheaterClient.getV(), cheaterClient.getName());
     server.signIn(alice.getV(), alice.getName());
-    cheaterClient.setV(server.getLoginV("alice"));
-    server.printBase();
     cout << "TRUE PERSON:" << server.verify(&alice) << endl;
     cout << "TRUE PERSON:" << server.verify(&bob) << endl;
-    cout << "PERSON WITH CHEATED V KEY :" << server.verify(&cheaterClient) << endl;
+    server.printBase();
+    cheaterClient.setV(server.getLoginV("alice"));
+    int count=0;
+    while(!server.verify(&cheaterClient)){
+        count++;
+        if(count>1000000
+        ){
+            cout<<"\nLIMIT\n";break;
+        }
+    }
+    cout << "PERSON WITH CHEATED V KEY :" <<count << endl;
     return 0;
 }
