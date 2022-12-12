@@ -46,9 +46,9 @@ lli modPow(lli iBase, lli iPow, lli iMod) {
     if (iMod == 0) {
         return 0;
     }
-    if (iPow == 0) {
-        return 1;
-    }
+//    if (iPow == 0) {
+//        return 1;
+//    }
     vector<lli> vecMod = {};
     lli logPow = (lli) log2((double) iPow);
     vecMod.push_back(iBase % iMod);
@@ -175,7 +175,7 @@ lli diffHelm(int iSeed = NULL) {
 }
 lli random(lli min, lli max) {
 
-    return rand() % (max - min) + min;
+    return (lli)rand() % (max - min) + min;
 }
 /**
  * Baby-step giant-step y=a^x mod p

@@ -197,7 +197,11 @@ int main() {
 
     //Initialize all components
     srand(time(NULL));
-    Server server = Server(20);
+    int times=-1;
+    cout<<"Number of accreditation times:\n";
+    while(times<0)
+        cin>>times;
+    Server server = Server(times);
     lli N = server.getN();
     Client alice = Client(N, "alice");
     Client bob = Client(N, "bob");
@@ -212,17 +216,17 @@ int main() {
     cout << "TRUE PERSON:" << result << endl;
     server.printBase();
 
-
     //Cheating attempt
     cheaterClient.setV(server.getLoginV("alice"));
     int count = 0;
     while (!server.verify(&cheaterClient)) {
         count++;
-        if (count > 1000000) {
+        if (count > 10000000) {
             cout << "\nLIMIT\n";
             break;
         }
     }
-    cout << "PERSON WITH CHEATED V KEY LOGIN ATTEMPTS :" << count << endl;
+    result=(count<1000000)?"SUCCESS - "+ to_string(count):"FAIL";
+    cout << "PERSON WITH CHEATED V KEY LOGIN ATTEMPTS :" << result << endl;
     return 0;
 }
