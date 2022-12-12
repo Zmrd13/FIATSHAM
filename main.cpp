@@ -196,7 +196,7 @@ public:
 
 };
 
-K    //Initialize all components
+    //Initialize all components
     srand(time(nullptr));
     int times = -1;
     cout << "Number of accreditation times:\n";
