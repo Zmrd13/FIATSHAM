@@ -196,6 +196,7 @@ public:
 
 };
 
+int main() {
     //Initialize all components
     srand(time(nullptr));
     int times = -1;
