@@ -8,13 +8,15 @@
 
 #include <vector>
 #include <cmath>
+
+#include <cstdint>
 /**
  * Библиотека по методичке защиты
  *
  *
  *
  */
-using lli = long long int;
+using lli = int_least64_t;
 using namespace std;
 
 template<typename T>

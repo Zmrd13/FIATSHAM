@@ -32,7 +32,7 @@ public:
         this->name = name;
     }
 
-    lli getV() {
+    [[nodiscard]] lli getV() const {
         return V;
     }
 
@@ -49,27 +49,28 @@ public:
     }
 
 
-
-    lli getY(int E) {
+    [[nodiscard]]lli getY(int E) const{
         return R * modPow(S, E, N);
     }
+
     /**
  * Func for cheating mode
  * sets own shared key as someone else's shared key
  * turns cheat mode on
  *
  * */
-    void setV(lli V) {
-        this->V = V;
+    void setV(lli sharedKey) {
+        this->V = sharedKey;
         cheater = true;
     }
+
 /**
  * Func for cheating mode
  * randomly chooses what to give to getX without knowing the secret but with a shared key
  * @see setV()
  *
  * */
-    lli cheatX() {
+    [[nodiscard]] lli cheatX() const {
         lli X;
         switch (rand() % 2) {
             case 1:
@@ -96,7 +97,7 @@ private:
 
     lli P{}, Q{}, N{};
     struct login {
-        lli V;
+        lli V{};
         string name;
     };
     vector<login> clientBase;
@@ -120,7 +121,7 @@ public:
       * @param V-Client's common key
       * @param name-Client's name (unique)
       * */
-    void signIn(lli V, string name) {
+    void signIn(lli V, const string& name) {
         login curr;
         for (auto &i: clientBase) {
             if (i.name == name) {
@@ -131,6 +132,7 @@ public:
         curr.name = name;
         clientBase.push_back(curr);
     }
+
     /**
       *  Func for getting common key of given name
        * @see Server
@@ -145,6 +147,7 @@ public:
         }
         return 0;
     }
+
     /**
       *  Func for printing entire client base
        * @see Server
@@ -152,29 +155,29 @@ public:
     lli printBase() {
         for (auto &i: clientBase) {
 
-            cout  << "NAME: |" <<setw(15)<< i.name << "|  SHARED KEY : |" <<setw(20)<< i.V <<"|\n";
+            cout << "NAME: |" << setw(15) << i.name << "|  SHARED KEY : |" << setw(20) << i.V << "|\n";
         }
         return 0;
     }
 
-    lli getN() {
+    [[nodiscard]] lli getN() const {
         return N;
     }
 
-        /**
-         *  Func for verifying given client
-          * @see Server
-          * @see Client
-          * @param intruder-pointer to given client
-          * @return true if verified
-          * */
+    /**
+     *  Func for verifying given client
+      * @see Server
+      * @see Client
+      * @param intruder-pointer to given client
+      * @return true if verified
+      * */
     bool verify(Client *intruder) {
         bool verified = false;
         for (int i = 0; i < numOfChecks; i++) {
             lli X = intruder->getX();
             int E = (int) rand() % 2;
             lli Y = intruder->getY(E);
-            lli c = ((Y * Y) == X * modPow(getLoginV(intruder->getName()), E, N));
+            int c = ((Y * Y) == X * modPow(getLoginV(intruder->getName()), E, N));
 //              cout<<(Y * Y)<<" "<< X * modPow(getLoginV(intruder->getName()), E, N)
 //              <<endl;
             if (Y) {
@@ -193,14 +196,12 @@ public:
 
 };
 
-int main() {
-
-    //Initialize all components
-    srand(time(NULL));
-    int times=-1;
-    cout<<"Number of accreditation times:\n";
-    while(times<0)
-        cin>>times;
+K    //Initialize all components
+    srand(time(nullptr));
+    int times = -1;
+    cout << "Number of accreditation times:\n";
+    while (times < 0)
+        cin >> times;
     Server server = Server(times);
     lli N = server.getN();
     Client alice = Client(N, "alice");
@@ -210,9 +211,9 @@ int main() {
     //Signing in server's base
     server.signIn(bob.getV(), bob.getName());
     server.signIn(alice.getV(), alice.getName());
-    string result =(server.verify(&alice))? "SUCCESS" :"FAIL";
-    cout << "TRUE PERSON:" <<result  << endl;
-    result =(server.verify(&bob))? "SUCCESS" :"FAIL";
+    string result = (server.verify(&alice)) ? "SUCCESS" : "FAIL";
+    cout << "TRUE PERSON:" << result << endl;
+    result = (server.verify(&bob)) ? "SUCCESS" : "FAIL";
     cout << "TRUE PERSON:" << result << endl;
     server.printBase();
 
@@ -221,12 +222,12 @@ int main() {
     int count = 0;
     while (!server.verify(&cheaterClient)) {
         count++;
-        if (count > 10000000) {
+        if (count > 100000) {
             cout << "\nLIMIT\n";
             break;
         }
     }
-    result=(count<1000000)?"SUCCESS - "+ to_string(count):"FAIL";
+    result = (count < 100000) ? "SUCCESS - " + to_string(count) : "FAIL";
     cout << "PERSON WITH CHEATED V KEY LOGIN ATTEMPTS :" << result << endl;
     return 0;
 }
